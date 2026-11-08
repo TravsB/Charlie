@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "NEXUS AI"
+description = "A supervised workspace for coordinating AI teams across projects, tasks, approvals, and deliverables. This first phase establishes the runnable product shell and infrastructure foundation before AI orchestration is added."
+version = "1.0.0"
+id = "artifacts/nexus-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22706
+
+[services.development]
+run = "pnpm --filter @workspace/nexus-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexus-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nexus-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22706"
+BASE_PATH = "/"
