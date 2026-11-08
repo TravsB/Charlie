@@ -1,5 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@layer theme, base, clerk, components, utilities;
 @import 'tailwindcss';
+@import '@clerk/themes/shadcn.css';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 
@@ -79,17 +81,17 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 38 32% 96%;
+  --background: 42 28% 96%;
 
-  --foreground: 211 28% 17%;
+  --foreground: 205 30% 16%;
 
-  --border: 210 16% 85%;
+  --border: 38 15% 83%;
 
-  --card: 40 38% 99%;
+  --card: 42 34% 99%;
 
-  --card-foreground: 211 28% 17%;
+  --card-foreground: 205 30% 16%;
 
-  --card-border: 210 17% 87%;
+  --card-border: 38 15% 84%;
 
   --sidebar: 213 30% 15%;
 
@@ -97,7 +99,7 @@
 
   --sidebar-border: 213 19% 24%;
 
-  --sidebar-primary: 163 42% 48%;
+  --sidebar-primary: 69 62% 64%;
 
   --sidebar-primary-foreground: 213 30% 12%;
 
@@ -105,7 +107,7 @@
 
   --sidebar-accent-foreground: 40 38% 97%;
 
-  --sidebar-ring: 163 42% 48%;
+  --sidebar-ring: 69 62% 64%;
 
   --popover: 40 38% 99%;
 
@@ -113,31 +115,31 @@
 
   --popover-border: 210 17% 87%;
 
-  --primary: 163 42% 38%;
+  --primary: 165 43% 34%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 18% 91%;
+  --secondary: 40 17% 90%;
 
-  --secondary-foreground: 211 28% 21%;
+  --secondary-foreground: 205 30% 21%;
 
-  --muted: 38 20% 91%;
+  --muted: 40 19% 91%;
 
-  --muted-foreground: 211 12% 48%;
+  --muted-foreground: 205 12% 46%;
 
-  --accent: 163 32% 91%;
+  --accent: 68 38% 88%;
 
-  --accent-foreground: 163 42% 25%;
+  --accent-foreground: 165 43% 24%;
 
   --destructive: 2 62% 49%;
 
   --destructive-foreground: 0 0% 100%;
 
   --input: 210 16% 85%;
-  --ring: 163 42% 38%;
-  --chart-1: 163 42% 38%;
-  --chart-2: 34 73% 56%;
-  --chart-3: 211 28% 35%;
+  --ring: 165 43% 34%;
+  --chart-1: 165 43% 34%;
+  --chart-2: 39 68% 53%;
+  --chart-3: 205 30% 35%;
   --chart-4: 2 62% 49%;
   --chart-5: 202 34% 64%;
 
@@ -228,9 +230,9 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.09);
 
-  --background: 38 25% 10%;
+  --background: 205 26% 10%;
 
-  --foreground: 38 28% 92%;
+  --foreground: 42 28% 92%;
 
   --border: 213 15% 27%;
 
@@ -246,7 +248,7 @@
 
   --sidebar-border: 213 19% 19%;
 
-  --sidebar-primary: 163 42% 48%;
+  --sidebar-primary: 69 62% 64%;
 
   --sidebar-primary-foreground: 213 30% 12%;
 
@@ -254,7 +256,7 @@
 
   --sidebar-accent-foreground: 40 38% 97%;
 
-  --sidebar-ring: 163 42% 48%;
+  --sidebar-ring: 69 62% 64%;
 
   --popover: 213 24% 14%;
 
@@ -262,7 +264,7 @@
 
   --popover-border: 213 15% 27%;
 
-  --primary: 163 42% 48%;
+  --primary: 165 43% 52%;
 
   --primary-foreground: 213 30% 12%;
 
@@ -274,9 +276,9 @@
 
   --muted-foreground: 210 12% 63%;
 
-  --accent: 163 22% 22%;
+  --accent: 68 24% 22%;
 
-  --accent-foreground: 163 45% 78%;
+  --accent-foreground: 68 48% 78%;
 
   --destructive: 2 62% 55%;
 
@@ -284,8 +286,8 @@
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
   --input: 213 15% 27%;
-  --ring: 163 42% 48%;
-  --chart-1: 163 42% 48%;
+  --ring: 165 43% 52%;
+  --chart-1: 165 43% 52%;
   --chart-2: 34 73% 56%;
   --chart-3: 211 28% 55%;
   --chart-4: 2 62% 58%;
@@ -445,6 +447,33 @@
   background:
     radial-gradient(ellipse at 82% 0%, rgba(222, 231, 220, 0.42), transparent 34rem),
     hsl(var(--background));
+}
+
+h1, h2, h3, .display-font {
+  font-family: 'Space Grotesk', var(--app-font-sans);
+}
+
+.nexus-grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: .13;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E");
+}
+
+.nexus-grid {
+  background-image: linear-gradient(rgba(28, 57, 53, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(28, 57, 53, .055) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.surface-lift {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+.surface-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px rgba(31, 52, 46, .08);
 }
 
 .mono {

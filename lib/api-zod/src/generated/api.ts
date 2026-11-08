@@ -28,3 +28,83 @@ export const ReadinessCheckResponse = zod.object({
 })
 
 
+/**
+ * @summary List the authenticated user's projects
+ */
+export const ListProjectsQueryParams = zod.object({
+  "status": zod.enum(['active', 'archived', 'all']).optional().describe('Defaults to active projects when omitted.')
+})
+
+export const ListProjectsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived']),
+  "archivedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
+
+
+/**
+ * @summary Create a project for the authenticated user
+ */
+export const createProjectBodyNameMax = 120;
+
+export const createProjectBodyDescriptionMax = 4000;
+
+
+
+export const CreateProjectBody = zod.object({
+  "name": zod.string().min(1).max(createProjectBodyNameMax),
+  "description": zod.string().max(createProjectBodyDescriptionMax).nullish()
+})
+
+export const CreateProjectResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived']),
+  "archivedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get an owned project
+ */
+export const GetProjectParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const GetProjectResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived']),
+  "archivedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Archive an owned project
+ */
+export const ArchiveProjectParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const ArchiveProjectResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived']),
+  "archivedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+

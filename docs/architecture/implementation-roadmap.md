@@ -8,11 +8,11 @@ Each phase has a bounded scope and an acceptance gate. Later-phase behavior is n
 
 **Gate:** the web and API workflows start, typecheck/build pass, the API liveness check passes, and the readiness check reports PostgreSQL availability. No AI provider or agent execution is implied by this phase.
 
-## Phase 2 — Identity and project management
+## Phase 2 — Identity and project management (Complete)
 
-Authentication, user-to-project ownership, project creation and lifecycle, dashboard, and project data migrations. Use managed authentication rather than a locally implemented password/JWT system.
+Managed Clerk authentication, local user profiles linked to Clerk identities, owner-scoped project creation/listing/viewing/archiving, dashboard integration, and PostgreSQL schema changes are implemented and verified. No local password or JWT authentication is used.
 
-**Gate:** authenticated users can create and retrieve only their own projects; ownership is enforced by the backend.
+**Gate (verified):** authenticated users can create and retrieve only their own projects; all project reads and writes are scoped to the authenticated owner. Archived projects retain their archive timestamp and remain viewable by their owner.
 
 ## Phase 3 — AI provider gateway
 

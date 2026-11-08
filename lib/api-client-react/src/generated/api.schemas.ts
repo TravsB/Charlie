@@ -31,3 +31,52 @@ export interface ReadinessStatus {
   checkedAt: string;
 }
 
+export interface CreateProjectRequest {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  description?: string | null;
+}
+
+export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
+
+
+export const ProjectStatus = {
+  active: 'active',
+  archived: 'archived',
+} as const;
+
+export interface Project {
+  id: string;
+  name: string;
+  /** @nullable */
+  description: string | null;
+  status: ProjectStatus;
+  /** @nullable */
+  archivedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ListProjectsParams = {
+/**
+ * Defaults to active projects when omitted.
+ */
+status?: ListProjectsStatus;
+};
+
+export type ListProjectsStatus = typeof ListProjectsStatus[keyof typeof ListProjectsStatus];
+
+
+export const ListProjectsStatus = {
+  active: 'active',
+  archived: 'archived',
+  all: 'all',
+} as const;
+

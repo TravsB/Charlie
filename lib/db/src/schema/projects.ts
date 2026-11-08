@@ -25,6 +25,7 @@ export const projectsTable = pgTable(
     name: text("name").notNull(),
     description: text("description"),
     status: projectStatusEnum("status").notNull().default("active"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -38,6 +39,7 @@ export const projectsTable = pgTable(
 
 export const insertProjectSchema = createInsertSchema(projectsTable).omit({
   id: true,
+  archivedAt: true,
   createdAt: true,
   updatedAt: true,
 });

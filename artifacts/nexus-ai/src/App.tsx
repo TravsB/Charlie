@@ -1,19 +1,88 @@
 import { type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Activity, AlertCircle, ArrowUpRight, Check, Clock3, Database, Layers3, RefreshCw, Server, ShieldCheck } from 'lucide-react';
+import { ClerkProvider, Show, SignIn, SignUp, useClerk } from '@clerk/react';
+import { publishableKeyFromHost } from '@clerk/react/internal';
+import { shadcn } from '@clerk/themes';
 import { getHealthCheckQueryKey, getReadinessCheckQueryKey, useHealthCheck, useReadinessCheck } from '@workspace/api-client-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
+import { ProjectDetailPage, ProjectsPage } from '@/pages/projects';
 import {
   Route,
+  Redirect,
   Switch,
   useLocation,
   Router as WouterRouter,
+  Link,
 } from 'wouter';
 
 const queryClient = new QueryClient();
+const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+function stripBase(path: string): string {
+  return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
+}
+
+if (!clerkPubKey) {
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env file');
+}
+
+const clerkAppearance = {
+  theme: shadcn,
+  cssLayerName: 'clerk',
+  options: {
+    logoPlacement: 'inside' as const,
+    logoLinkUrl: basePath || '/',
+    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    socialButtonsPlacement: 'top' as const,
+    socialButtonsVariant: 'blockButton' as const,
+  },
+  variables: {
+    colorPrimary: '#28584b',
+    colorForeground: '#20332f',
+    colorMutedForeground: '#697873',
+    colorDanger: '#a84f42',
+    colorBackground: '#fbfaf5',
+    colorInput: '#fffefa',
+    colorInputForeground: '#20332f',
+    colorNeutral: '#20332f',
+    fontFamily: 'Manrope, sans-serif',
+    borderRadius: '0.7rem',
+  },
+  elements: {
+    rootBox: 'w-full flex justify-center',
+    cardBox: 'bg-[#fbfaf5] rounded-2xl w-[440px] max-w-full overflow-hidden border border-[#dedfd2]',
+    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
+    footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
+    headerTitle: 'text-[#20332f] font-semibold tracking-tight',
+    headerSubtitle: 'text-[#697873]',
+    socialButtonsBlockButtonText: 'text-[#20332f] font-semibold',
+    formFieldLabel: 'text-[#344843] font-semibold',
+    footerActionLink: 'text-[#28584b] font-semibold',
+    footerActionText: 'text-[#697873]',
+    dividerText: 'text-[#7c8983]',
+    identityPreviewEditButton: 'text-[#28584b]',
+    formFieldSuccessText: 'text-[#357653]',
+    alertText: 'text-[#8f4439]',
+    logoBox: 'mb-2',
+    logoImage: 'max-h-10',
+    socialButtonsBlockButton: 'border-[#d8ddd3] bg-[#fffefa] hover:bg-[#f1f2e9]',
+    formButtonPrimary: 'bg-[#28584b] hover:bg-[#1d4338] text-[#f5f5e9] font-semibold',
+    formFieldInput: 'border-[#d8ddd3] bg-[#fffefa] text-[#20332f]',
+    footerAction: 'border-t border-[#e5e5da]',
+    dividerLine: 'bg-[#e1e3d8]',
+    alert: 'border-[#e6c7bd] bg-[#fbefeb]',
+    otpCodeFieldInput: 'border-[#d8ddd3] bg-[#fffefa]',
+    formFieldRow: 'gap-1.5',
+    main: 'gap-5',
+  },
+};
 
 function Home() {
   const health = useHealthCheck({
@@ -74,13 +143,16 @@ function Home() {
             <div className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-card text-primary md:hidden">
               <Layers3 size={16} />
             </div>
-            <div className="text-[11px] font-semibold text-muted-foreground">
+              <div className="text-[11px] font-semibold text-muted-foreground">
               <span className="hidden sm:inline">NEXUS AI</span>
               <span className="mx-2 text-border">/</span>
               <span className="text-foreground">Overview</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-3 py-1.5">
+          <div className="flex items-center gap-2">
+            <Link href="/sign-in" className="hidden rounded-md px-3 py-2 text-[10px] font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:inline-flex" data-testid="link-sign-in">Sign in</Link>
+            <Link href="/sign-up" className="inline-flex items-center rounded-md bg-[#1d423a] px-3.5 py-2 text-[10px] font-bold text-[#f5f5e9] transition hover:bg-[#27564a]" data-testid="link-sign-up">Create account <ArrowUpRight size={12} className="ml-1" /></Link>
+            <div className="flex items-center gap-2 rounded-full border border-border/80 bg-card/70 px-3 py-1.5">
             <span className="relative flex h-2 w-2">
               <span className={`absolute inline-flex h-full w-full rounded-full opacity-40 ${ready ? 'animate-ping bg-emerald-500' : 'hidden'}`} />
               <span className={`relative inline-flex h-2 w-2 rounded-full ${loading ? 'bg-amber-500' : ready ? 'bg-emerald-600' : hasError ? 'bg-rose-600' : 'bg-amber-500'}`} />
@@ -88,6 +160,7 @@ function Home() {
             <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
               {loading ? 'Checking services' : hasError ? 'Check failed' : ready ? 'Foundation ready' : 'Not ready'}
             </span>
+            </div>
           </div>
         </header>
 
@@ -98,10 +171,10 @@ function Home() {
                 <span className="h-px w-5 bg-primary" /> Control plane / 01
               </div>
               <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.055em] text-foreground sm:text-[42px]">
-                Foundation overview
+                AI work, in your hands.
               </h1>
               <p className="mt-2 max-w-[530px] text-[13px] leading-6 text-muted-foreground">
-                A clear view of the NEXUS runtime and its database connection.
+                A control workspace for directing AI teams — with project work you can inspect and decisions that stay yours.
               </p>
             </div>
             <div className="mono flex items-center gap-2 pb-1 text-[10px] text-muted-foreground">
@@ -288,13 +361,115 @@ function ServiceRow({
   );
 }
 
-function Router() {
+function HomeRedirect() {
   return (
-    // Keep a shared shell (sidebar, navbar) outside the boundary so it
-    // survives a page crash.
+    <>
+      <Show when="signed-in"><Redirect to="/projects" /></Show>
+      <Show when="signed-out"><Home /></Show>
+    </>
+  );
+}
+
+function ProtectedProjects() {
+  return (
+    <>
+      <Show when="signed-in"><ProjectsPage /></Show>
+      <Show when="signed-out"><Redirect to="/" /></Show>
+    </>
+  );
+}
+
+function ProtectedProjectDetail() {
+  return (
+    <>
+      <Show when="signed-in"><ProjectDetailPage /></Show>
+      <Show when="signed-out"><Redirect to="/" /></Show>
+    </>
+  );
+}
+
+function SignInPage() {
+  return (
+    <div className="nexus-grain relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#e9ede1] px-4 py-10">
+      <div className="absolute inset-0 nexus-grid opacity-50" />
+      <div className="absolute -left-24 top-1/4 h-72 w-72 rounded-full border border-[#9dad8d]/40" />
+      <div className="absolute -right-20 bottom-1/4 h-80 w-80 rounded-full border border-[#9dad8d]/35" />
+      <div className="relative z-10 w-full">
+        <div className="mb-6 text-center">
+          <p className="mono text-[9px] font-medium uppercase tracking-[.2em] text-[#496558]">NEXUS AI / CONTROL WORKSPACE</p>
+          <p className="display-font mt-2 text-[18px] font-semibold tracking-[-.04em] text-[#20332f]">Your work, under your direction.</p>
+        </div>
+        <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+        <Link href="/" className="relative z-10 mx-auto mt-5 block w-fit text-[10px] font-semibold text-[#536961] hover:text-[#20332f]" data-testid="link-auth-home">Back to NEXUS</Link>
+      </div>
+    </div>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <div className="nexus-grain relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-[#e9ede1] px-4 py-10">
+      <div className="absolute inset-0 nexus-grid opacity-50" />
+      <div className="absolute -left-24 top-1/4 h-72 w-72 rounded-full border border-[#9dad8d]/40" />
+      <div className="absolute -right-20 bottom-1/4 h-80 w-80 rounded-full border border-[#9dad8d]/35" />
+      <div className="relative z-10 w-full">
+        <div className="mb-6 text-center">
+          <p className="mono text-[9px] font-medium uppercase tracking-[.2em] text-[#496558]">NEXUS AI / CONTROL WORKSPACE</p>
+          <p className="display-font mt-2 text-[18px] font-semibold tracking-[-.04em] text-[#20332f]">Build a team you can actually direct.</p>
+        </div>
+        <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+        <Link href="/" className="relative z-10 mx-auto mt-5 block w-fit text-[10px] font-semibold text-[#536961] hover:text-[#20332f]" data-testid="link-auth-home">Back to NEXUS</Link>
+      </div>
+    </div>
+  );
+}
+
+function ClerkQueryClientCacheInvalidator() {
+  const { addListener } = useClerk();
+  const client = useQueryClient();
+  const previousUserId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const unsubscribe = addListener(({ user }) => {
+      const userId = user?.id ?? null;
+      if (previousUserId.current !== undefined && previousUserId.current !== userId) client.clear();
+      previousUserId.current = userId;
+    });
+    return unsubscribe;
+  }, [addListener, client]);
+  return null;
+}
+
+function ClerkProviderWithRoutes() {
+  const [, setLocation] = useLocation();
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={{
+        signIn: { start: { title: 'Welcome back', subtitle: 'Pick up where your team left off.' } },
+        signUp: { start: { title: 'Make room for better work', subtitle: 'Create your NEXUS workspace.' } },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <ClerkQueryClientCacheInvalidator />
+      <RoutedPages />
+    </ClerkProvider>
+  );
+}
+
+function RoutedPages() {
+  return (
     <RoutedErrorBoundary>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={HomeRedirect} />
+        <Route path="/projects" component={ProtectedProjects} />
+        <Route path="/projects/:id" component={ProtectedProjectDetail} />
+        <Route path="/sign-in/*?" component={SignInPage} />
+        <Route path="/sign-up/*?" component={SignUpPage} />
         <Route component={NotFound} />
       </Switch>
     </RoutedErrorBoundary>
@@ -310,8 +485,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
+        <WouterRouter base={basePath}>
+          <ClerkProviderWithRoutes />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 export const usersTable = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   authProviderId: text("auth_provider_id").unique(),
-  email: text("email").notNull().unique(),
+  email: text("email"),
   displayName: text("display_name"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
