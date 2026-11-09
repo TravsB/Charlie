@@ -44,6 +44,19 @@ export interface CreateProjectRequest {
   description?: string | null;
 }
 
+export interface UpdateProjectRequest {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name?: string;
+  /**
+     * @maxLength 4000
+     * @nullable
+     */
+  description?: string | null;
+}
+
 export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 
 

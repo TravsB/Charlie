@@ -1,1 +1,2 @@
 - [Drizzle migration output](drizzle-migration-output.md) — use a relative output directory with filtered workspace migration commands.
+- [pnpm workspace edits](pnpm-workspace-normalization.md) — inspect package-add diffs; pnpm may rewrite workspace policy comments and catalog formatting.

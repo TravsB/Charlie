@@ -10,9 +10,9 @@ Each phase has a bounded scope and an acceptance gate. Later-phase behavior is n
 
 ## Phase 2 — Identity and project management (Complete)
 
-Managed Clerk authentication, local user profiles linked to Clerk identities, owner-scoped project creation/listing/viewing/archiving, dashboard integration, and PostgreSQL schema changes are implemented and verified. No local password or JWT authentication is used.
+Managed Clerk authentication, local user profiles linked to Clerk identities, and owner-scoped project creation/listing/viewing/editing/archiving are implemented. Project endpoints disable HTTP caching and omit internal owner IDs from responses. No local password or JWT authentication is used.
 
-**Gate (verified):** authenticated users can create and retrieve only their own projects; all project reads and writes are scoped to the authenticated owner. Archived projects retain their archive timestamp and remain viewable by their owner.
+**Gate (verified):** a database-backed integration test uses two temporary owners inside a rolled-back transaction to prove each sees only their own projects and cannot read, edit, or archive another owner's project. The test also checks anonymous requests, edit validation, response privacy, and archive behavior.
 
 ## Phase 3 — AI provider gateway
 

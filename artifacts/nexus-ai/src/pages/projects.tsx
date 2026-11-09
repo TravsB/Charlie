@@ -1,8 +1,8 @@
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useParams } from 'wouter';
-import { Archive, ArrowLeft, ArrowUpRight, Check, ChevronRight, CirclePlus, FolderKanban, Layers3, LoaderCircle, Plus, Search, ShieldCheck, X } from 'lucide-react';
-import { useArchiveProject, useCreateProject, useGetProject, useListProjects, getGetProjectQueryKey, getListProjectsQueryKey } from '@workspace/api-client-react';
+import { Archive, ArrowLeft, ArrowUpRight, Check, ChevronRight, CirclePlus, FolderKanban, Layers3, LoaderCircle, Pencil, Plus, Search, ShieldCheck, X } from 'lucide-react';
+import { useArchiveProject, useCreateProject, useGetProject, useListProjects, useUpdateProject, getGetProjectQueryKey, getListProjectsQueryKey } from '@workspace/api-client-react';
 import { useClerk, useUser } from '@clerk/react';
 
 type ProjectStatusFilter = 'active' | 'archived' | 'all';
@@ -234,10 +234,43 @@ export function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const projectId = id ?? '';
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [notice, setNotice] = useState('');
   const queryKey = getGetProjectQueryKey(projectId);
   const projectQuery = useGetProject(projectId, { query: { enabled: Boolean(projectId), queryKey } });
   const archiveProject = useArchiveProject();
+  const updateProject = useUpdateProject();
   const queryClient = useQueryClient();
+
+  const openEdit = () => {
+    if (!projectQuery.data || projectQuery.data.status === 'archived') return;
+    setEditName(projectQuery.data.name);
+    setEditDescription(projectQuery.data.description ?? '');
+    setNotice('');
+    setShowEdit(true);
+  };
+
+  const submitEdit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editName.trim()) return;
+
+    updateProject.mutate({
+      projectId,
+      data: {
+        name: editName.trim(),
+        description: editDescription.trim() || null,
+      },
+    }, {
+      onSuccess: async (updated) => {
+        queryClient.setQueryData(getGetProjectQueryKey(projectId), updated);
+        await queryClient.invalidateQueries({ queryKey: getListProjectsQueryKey() });
+        setShowEdit(false);
+        setNotice('Project details saved.');
+      },
+    });
+  };
 
   const archive = () => {
     if (!projectQuery.data || projectQuery.data.status === 'archived') return;
@@ -255,6 +288,7 @@ export function ProjectDetailPage() {
     <WorkspaceFrame active="project">
       <div className="mx-auto max-w-[1060px] px-4 pb-16 pt-8 sm:px-7 sm:pt-10 lg:px-10">
         <Link href="/projects" className="inline-flex items-center gap-2 text-[10px] font-semibold text-muted-foreground transition hover:text-foreground" data-testid="link-back-projects"><ArrowLeft size={14} /> All projects</Link>
+        {notice && <div role="status" className="mt-4 flex items-center gap-2 rounded-lg border border-[#b9d4c4] bg-[#eaf3ed] px-4 py-3 text-[10px] font-semibold text-[#285b43]" data-testid="status-project-updated"><Check size={14} />{notice}</div>}
         {projectQuery.isLoading ? (
           <div className="mt-7 animate-pulse rounded-2xl border border-border bg-card p-7"><div className="h-3 w-24 rounded bg-muted" /><div className="mt-6 h-8 w-1/2 rounded bg-muted" /><div className="mt-4 h-4 w-2/3 rounded bg-muted" /></div>
         ) : projectQuery.isError || !projectQuery.data ? (
@@ -273,7 +307,10 @@ export function ProjectDetailPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="mono rounded-full bg-white/[.09] px-2.5 py-1 text-[8px] uppercase tracking-[.1em] text-[#e4e9d9]">Project workspace</span>
                     <span className={`mono flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[8px] uppercase ${projectQuery.data.status === 'active' ? 'bg-[#d8e26a]/15 text-[#e4ed9b]' : 'bg-white/10 text-[#d0d8ce]'}`}><span className={`h-1.5 w-1.5 rounded-full ${projectQuery.data.status === 'active' ? 'bg-[#d8e26a]' : 'bg-[#b9c1b5]'}`} />{projectQuery.data.status}</span>
-                    <button type="button" disabled={projectQuery.data.status === 'archived' || archiveProject.isPending} onClick={archive} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-md border border-white/15 px-3 text-[9px] font-semibold text-[#e4e9d9] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45" data-testid="button-archive-project">{archiveProject.isPending ? <LoaderCircle size={12} className="animate-spin" /> : <Archive size={12} />}{projectQuery.data.status === 'archived' ? 'Archived' : 'Archive project'}</button>
+                    <div className="ml-auto flex flex-wrap gap-2">
+                      {projectQuery.data.status === 'active' && <button type="button" onClick={openEdit} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/15 px-3 text-[9px] font-semibold text-[#e4e9d9] transition hover:bg-white/10" data-testid="button-edit-project"><Pencil size={12} />Edit details</button>}
+                      <button type="button" disabled={projectQuery.data.status === 'archived' || archiveProject.isPending} onClick={archive} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/15 px-3 text-[9px] font-semibold text-[#e4e9d9] transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-45" data-testid="button-archive-project">{archiveProject.isPending ? <LoaderCircle size={12} className="animate-spin" /> : <Archive size={12} />}{projectQuery.data.status === 'archived' ? 'Archived' : 'Archive project'}</button>
+                    </div>
                   </div>
                   <h1 className="display-font mt-6 max-w-[780px] break-words text-[30px] font-semibold leading-tight tracking-[-.06em] sm:text-[42px]" data-testid="text-project-name">{projectQuery.data.name}</h1>
                   <p className="mt-3 max-w-[680px] whitespace-pre-wrap text-[12px] leading-6 text-[#c0cdc2]" data-testid="text-project-description">{projectQuery.data.description || 'No brief has been added yet. This project space is ready for context whenever you are.'}</p>
@@ -306,6 +343,25 @@ export function ProjectDetailPage() {
           </>
         )}
       </div>
+      {showEdit && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#142522]/55 p-4 backdrop-blur-[3px]" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !updateProject.isPending) setShowEdit(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="edit-project-title" className="entrance w-full max-w-[480px] rounded-2xl border border-border bg-[#fbfaf5] p-5 shadow-2xl sm:p-7">
+            <div className="flex items-start justify-between">
+              <div><p className="mono text-[9px] uppercase tracking-[.16em] text-primary">Project settings</p><h2 id="edit-project-title" className="display-font mt-2 text-[22px] font-semibold tracking-[-.05em]">Update the brief.</h2><p className="mt-1 text-[10px] leading-5 text-muted-foreground">Keep the project context accurate for future NEXUS work.</p></div>
+              <button type="button" disabled={updateProject.isPending} onClick={() => setShowEdit(false)} className="rounded-md p-2 text-muted-foreground hover:bg-muted disabled:opacity-50" aria-label="Close dialog" data-testid="button-close-edit"><X size={16} /></button>
+            </div>
+            <form onSubmit={submitEdit} className="mt-6 space-y-4">
+              <label className="block"><span className="mb-1.5 block text-[10px] font-bold">Project name <span className="text-[#b34b3f]">*</span></span><input autoFocus required maxLength={120} value={editName} onChange={(event) => setEditName(event.target.value)} className="h-11 w-full rounded-lg border border-border bg-card px-3 text-[11px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/10" data-testid="input-edit-project-name" /></label>
+              <label className="block"><span className="mb-1.5 block text-[10px] font-bold">Brief <span className="font-normal text-muted-foreground">(optional)</span></span><textarea maxLength={4000} rows={4} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} placeholder="What are you trying to accomplish?" className="w-full resize-y rounded-lg border border-border bg-card px-3 py-2.5 text-[11px] leading-5 outline-none placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/10" data-testid="input-edit-project-description" /></label>
+              {updateProject.isError && <p className="rounded-lg bg-[#f7e9e3] px-3 py-2 text-[10px] text-[#8b4738]" role="alert" data-testid="error-update-project">Couldn’t save these project details. Check your connection and try again.</p>}
+              <div className="flex justify-end gap-2 border-t border-border/80 pt-4">
+                <button type="button" disabled={updateProject.isPending} onClick={() => setShowEdit(false)} className="h-9 rounded-lg px-3 text-[10px] font-semibold text-muted-foreground hover:bg-muted disabled:opacity-50" data-testid="button-cancel-edit">Cancel</button>
+                <button type="submit" disabled={updateProject.isPending || !editName.trim()} className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#1d423a] px-4 text-[10px] font-bold text-[#f5f5e9] hover:bg-[#27564a] disabled:cursor-not-allowed disabled:opacity-55" data-testid="button-submit-edit">{updateProject.isPending && <LoaderCircle size={13} className="animate-spin" />}{updateProject.isPending ? 'Saving…' : 'Save changes'}</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </WorkspaceFrame>
   );
 }

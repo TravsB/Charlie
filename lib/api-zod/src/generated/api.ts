@@ -91,6 +91,35 @@ export const GetProjectResponse = zod.object({
 
 
 /**
+ * @summary Update an owned active project
+ */
+export const UpdateProjectParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const updateProjectBodyNameMax = 120;
+
+export const updateProjectBodyDescriptionMax = 4000;
+
+
+
+export const UpdateProjectBody = zod.object({
+  "name": zod.string().min(1).max(updateProjectBodyNameMax).optional(),
+  "description": zod.string().max(updateProjectBodyDescriptionMax).nullish()
+})
+
+export const UpdateProjectResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "description": zod.string().nullable(),
+  "status": zod.enum(['active', 'archived']),
+  "archivedAt": zod.coerce.date().nullable(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Archive an owned project
  */
 export const ArchiveProjectParams = zod.object({

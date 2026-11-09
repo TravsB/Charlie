@@ -113,6 +113,36 @@ paths:
           description: Authentication required
         "404":
           description: Project not found
+    patch:
+      operationId: updateProject
+      tags: [projects]
+      summary: Update an owned active project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProjectRequest"
+      responses:
+        "200":
+          description: Project updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
+          description: Invalid project input
+        "401":
+          description: Authentication required
+        "404":
+          description: Project not found
   /projects/{projectId}/archive:
     post:
       operationId: archiveProject
@@ -175,6 +205,18 @@ components:
           nullable: true
       required:
         - name
+    UpdateProjectRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: ["string", "null"]
+          maxLength: 4000
     Project:
       type: object
       properties:

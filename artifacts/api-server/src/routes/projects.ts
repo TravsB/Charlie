@@ -1,116 +1,101 @@
 import { and, desc, eq } from "drizzle-orm";
-import { db, projectsTable } from "@workspace/db";
-import { Router, type IRouter } from "express";
+import { db, projectsTable, type Project } from "@workspace/db";
+import { Router, type IRouter, type RequestHandler } from "express";
 import { requireProjectUser } from "../middlewares/require-project-user";
-import { CreateProjectBody } from "@workspace/api-zod";
+import { CreateProjectBody, UpdateProjectBody } from "@workspace/api-zod";
 
-const router: IRouter = Router();
+type ProjectsRouterOptions = {
+  database?: typeof db;
+  authenticate?: RequestHandler;
+};
+
 const projectIdPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-router.use(requireProjectUser);
+function toProjectResponse({ ownerId: _ownerId, ...project }: Project) {
+  return project;
+}
 
-router.get("/projects", async (req, res): Promise<void> => {
-  const requestedStatus = req.query.status;
-  const status =
-    typeof requestedStatus === "string" ? requestedStatus : "active";
+export function createProjectsRouter({
+  database = db,
+  authenticate = requireProjectUser,
+}: ProjectsRouterOptions = {}): IRouter {
+  const router: IRouter = Router();
 
-  if (!["active", "archived", "all"].includes(status)) {
-    res.status(400).json({ error: "Invalid project status" });
-    return;
-  }
+  router.use((_req, res, next) => {
+    res.setHeader("Cache-Control", "private, no-store");
+    next();
+  });
+  router.use(authenticate);
 
-  try {
-    const ownerId = req.localUserId!;
-    const projectStatus = status === "archived" ? "archived" : "active";
-    const projects =
-      status === "all"
-        ? await db
-            .select()
-            .from(projectsTable)
-            .where(eq(projectsTable.ownerId, ownerId))
-            .orderBy(desc(projectsTable.updatedAt))
-        : await db
-            .select()
-            .from(projectsTable)
-            .where(
-              and(
-                eq(projectsTable.ownerId, ownerId),
-                eq(projectsTable.status, projectStatus),
-              ),
-            )
-            .orderBy(desc(projectsTable.updatedAt));
+  router.get("/projects", async (req, res): Promise<void> => {
+    const requestedStatus = req.query.status;
+    const status =
+      typeof requestedStatus === "string" ? requestedStatus : "active";
 
-    res.json(projects);
-  } catch (error) {
-    req.log.error({ err: error }, "Failed to list projects");
-    res.status(500).json({ error: "Projects could not be loaded" });
-  }
-});
-
-router.post("/projects", async (req, res): Promise<void> => {
-  const parsed = CreateProjectBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "A valid project name is required" });
-    return;
-  }
-  const name = parsed.data.name.trim();
-  if (!name) {
-    res.status(400).json({ error: "A valid project name is required" });
-    return;
-  }
-
-  try {
-    const [project] = await db
-      .insert(projectsTable)
-      .values({
-        ownerId: req.localUserId!,
-        name,
-        description: parsed.data.description?.trim() || null,
-      })
-      .returning();
-
-    res.status(201).json(project);
-  } catch (error) {
-    req.log.error({ err: error }, "Failed to create project");
-    res.status(500).json({ error: "Project could not be created" });
-  }
-});
-
-router.get("/projects/:projectId", async (req, res): Promise<void> => {
-  const { projectId } = req.params;
-  if (!projectIdPattern.test(projectId)) {
-    res.status(404).json({ error: "Project not found" });
-    return;
-  }
-
-  try {
-    const [project] = await db
-      .select()
-      .from(projectsTable)
-      .where(
-        and(
-          eq(projectsTable.id, projectId),
-          eq(projectsTable.ownerId, req.localUserId!),
-        ),
-      )
-      .limit(1);
-
-    if (!project) {
-      res.status(404).json({ error: "Project not found" });
+    if (!["active", "archived", "all"].includes(status)) {
+      res.status(400).json({ error: "Invalid project status" });
       return;
     }
 
-    res.json(project);
-  } catch (error) {
-    req.log.error({ err: error }, "Failed to load project");
-    res.status(500).json({ error: "Project could not be loaded" });
-  }
-});
+    try {
+      const ownerId = req.localUserId!;
+      const projectStatus = status === "archived" ? "archived" : "active";
+      const projects =
+        status === "all"
+          ? await database
+              .select()
+              .from(projectsTable)
+              .where(eq(projectsTable.ownerId, ownerId))
+              .orderBy(desc(projectsTable.updatedAt))
+          : await database
+              .select()
+              .from(projectsTable)
+              .where(
+                and(
+                  eq(projectsTable.ownerId, ownerId),
+                  eq(projectsTable.status, projectStatus),
+                ),
+              )
+              .orderBy(desc(projectsTable.updatedAt));
 
-router.post(
-  "/projects/:projectId/archive",
-  async (req, res): Promise<void> => {
+      res.json(projects.map(toProjectResponse));
+    } catch (error) {
+      req.log.error({ err: error }, "Failed to list projects");
+      res.status(500).json({ error: "Projects could not be loaded" });
+    }
+  });
+
+  router.post("/projects", async (req, res): Promise<void> => {
+    const parsed = CreateProjectBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "A valid project name is required" });
+      return;
+    }
+    const name = parsed.data.name.trim();
+    if (!name) {
+      res.status(400).json({ error: "A valid project name is required" });
+      return;
+    }
+
+    try {
+      const [project] = await database
+        .insert(projectsTable)
+        .values({
+          ownerId: req.localUserId!,
+          name,
+          description: parsed.data.description?.trim() || null,
+        })
+        .returning();
+
+      res.status(201).json(toProjectResponse(project));
+    } catch (error) {
+      req.log.error({ err: error }, "Failed to create project");
+      res.status(500).json({ error: "Project could not be created" });
+    }
+  });
+
+  router.get("/projects/:projectId", async (req, res): Promise<void> => {
     const { projectId } = req.params;
     if (!projectIdPattern.test(projectId)) {
       res.status(404).json({ error: "Project not found" });
@@ -118,30 +103,75 @@ router.post(
     }
 
     try {
-      const whereOwned = and(
-        eq(projectsTable.id, projectId),
-        eq(projectsTable.ownerId, req.localUserId!),
-      );
-      const [existing] = await db
+      const [project] = await database
         .select()
         .from(projectsTable)
-        .where(whereOwned)
+        .where(
+          and(
+            eq(projectsTable.id, projectId),
+            eq(projectsTable.ownerId, req.localUserId!),
+          ),
+        )
         .limit(1);
 
-      if (!existing) {
+      if (!project) {
         res.status(404).json({ error: "Project not found" });
         return;
       }
 
-      if (existing.status === "archived") {
-        res.json(existing);
+      res.json(toProjectResponse(project));
+    } catch (error) {
+      req.log.error({ err: error }, "Failed to load project");
+      res.status(500).json({ error: "Project could not be loaded" });
+    }
+  });
+
+  router.patch("/projects/:projectId", async (req, res): Promise<void> => {
+    const { projectId } = req.params;
+    if (!projectIdPattern.test(projectId)) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+
+    const parsed = UpdateProjectBody.safeParse(req.body);
+    if (!parsed.success || Object.keys(parsed.data ?? {}).length === 0) {
+      res.status(400).json({ error: "A valid project update is required" });
+      return;
+    }
+
+    const changes: {
+      name?: string;
+      description?: string | null;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+
+    if (parsed.data.name !== undefined) {
+      const name = parsed.data.name.trim();
+      if (!name) {
+        res.status(400).json({ error: "Project name cannot be empty" });
         return;
       }
+      changes.name = name;
+    }
 
-      const [project] = await db
+    if (parsed.data.description !== undefined) {
+      changes.description =
+        parsed.data.description === null
+          ? null
+          : parsed.data.description.trim() || null;
+    }
+
+    try {
+      const [project] = await database
         .update(projectsTable)
-        .set({ status: "archived", archivedAt: new Date() })
-        .where(whereOwned)
+        .set(changes)
+        .where(
+          and(
+            eq(projectsTable.id, projectId),
+            eq(projectsTable.ownerId, req.localUserId!),
+            eq(projectsTable.status, "active"),
+          ),
+        )
         .returning();
 
       if (!project) {
@@ -149,12 +179,67 @@ router.post(
         return;
       }
 
-      res.json(project);
+      res.json(toProjectResponse(project));
     } catch (error) {
-      req.log.error({ err: error }, "Failed to archive project");
-      res.status(500).json({ error: "Project could not be archived" });
+      req.log.error({ err: error }, "Failed to update project");
+      res.status(500).json({ error: "Project could not be updated" });
     }
-  },
-);
+  });
 
-export default router;
+  router.post(
+    "/projects/:projectId/archive",
+    async (req, res): Promise<void> => {
+      const { projectId } = req.params;
+      if (!projectIdPattern.test(projectId)) {
+        res.status(404).json({ error: "Project not found" });
+        return;
+      }
+
+      try {
+        const whereOwned = and(
+          eq(projectsTable.id, projectId),
+          eq(projectsTable.ownerId, req.localUserId!),
+        );
+        const [existing] = await database
+          .select()
+          .from(projectsTable)
+          .where(whereOwned)
+          .limit(1);
+
+        if (!existing) {
+          res.status(404).json({ error: "Project not found" });
+          return;
+        }
+
+        if (existing.status === "archived") {
+          res.json(toProjectResponse(existing));
+          return;
+        }
+
+        const [project] = await database
+          .update(projectsTable)
+          .set({
+            status: "archived",
+            archivedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(whereOwned)
+          .returning();
+
+        if (!project) {
+          res.status(404).json({ error: "Project not found" });
+          return;
+        }
+
+        res.json(toProjectResponse(project));
+      } catch (error) {
+        req.log.error({ err: error }, "Failed to archive project");
+        res.status(500).json({ error: "Project could not be archived" });
+      }
+    },
+  );
+
+  return router;
+}
+
+export default createProjectsRouter();

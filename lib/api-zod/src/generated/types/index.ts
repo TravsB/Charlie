@@ -15,3 +15,4 @@ export * from './projectStatus';
 export * from './readinessStatus';
 export * from './readinessStatusDatabase';
 export * from './readinessStatusStatus';
+export * from './updateProjectRequest';
