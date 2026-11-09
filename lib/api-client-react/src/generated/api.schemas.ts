@@ -77,6 +77,78 @@ export interface Project {
   updatedAt: string;
 }
 
+export type ProviderKey = typeof ProviderKey[keyof typeof ProviderKey];
+
+
+export const ProviderKey = {
+  openai: 'openai',
+} as const;
+
+export type ProviderStatus = typeof ProviderStatus[keyof typeof ProviderStatus];
+
+
+export const ProviderStatus = {
+  pending: 'pending',
+  ready: 'ready',
+  invalid: 'invalid',
+} as const;
+
+export type ProviderCapability = typeof ProviderCapability[keyof typeof ProviderCapability];
+
+
+export const ProviderCapability = {
+  'text-generation': 'text-generation',
+  streaming: 'streaming',
+} as const;
+
+export interface ProviderDescriptor {
+  providerKey: ProviderKey;
+  displayName: string;
+  configured: boolean;
+  capabilities: ProviderCapability[];
+}
+
+export interface ProviderModel {
+  id: string;
+  capabilities: ProviderCapability[];
+}
+
+export interface ProviderModelsResponse {
+  providerKey: ProviderKey;
+  configured: boolean;
+  models: ProviderModel[];
+}
+
+export interface ProviderConnection {
+  id: string;
+  providerKey: ProviderKey;
+  modelIdentifier: string;
+  status: ProviderStatus;
+  capabilities: ProviderCapability[];
+  /** @nullable */
+  validatedAt: string | null;
+  updatedAt: string;
+}
+
+export interface ProjectProviderConnectionState {
+  providerConfigured: boolean;
+  connection: ProviderConnection | null;
+}
+
+export interface ProviderConnectionInput {
+  providerKey: ProviderKey;
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  modelIdentifier: string;
+}
+
+export interface ProviderValidationResponse {
+  connection: ProviderConnection;
+  message: string;
+}
+
 export type ListProjectsParams = {
 /**
  * Defaults to active projects when omitted.

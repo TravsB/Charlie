@@ -3,6 +3,7 @@ import {
   index,
   integer,
   numeric,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -11,6 +12,12 @@ import {
 import { z } from "zod/v4";
 import { agentsTable } from "./agents";
 import { executionsTable } from "./executions";
+
+export const usageCostStatusEnum = pgEnum("usage_cost_status", [
+  "unknown",
+  "estimated",
+  "provider_reported",
+]);
 
 export const usageRecordsTable = pgTable(
   "usage_records",
@@ -26,9 +33,10 @@ export const usageRecordsTable = pgTable(
     modelIdentifier: text("model_identifier"),
     inputTokens: integer("input_tokens").notNull().default(0),
     outputTokens: integer("output_tokens").notNull().default(0),
-    estimatedCost: numeric("estimated_cost", { precision: 14, scale: 8 })
+    estimatedCost: numeric("estimated_cost", { precision: 14, scale: 8 }),
+    costStatus: usageCostStatusEnum("cost_status")
       .notNull()
-      .default("0"),
+      .default("unknown"),
     currency: text("currency").notNull().default("USD"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

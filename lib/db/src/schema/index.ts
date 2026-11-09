@@ -10,4 +10,5 @@ export * from "./messages";
 export * from "./approvals";
 export * from "./artifacts";
 export * from "./usage-records";
+export * from "./provider-connections";
 export * from "./audit-logs";

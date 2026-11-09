@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: projects
     description: Authenticated project management
+  - name: providers
+    description: Provider-neutral model configuration and validation
 paths:
   /healthz:
     get:
@@ -166,6 +168,118 @@ paths:
           description: Authentication required
         "404":
           description: Project not found
+  /providers:
+    get:
+      operationId: listProviders
+      tags: [providers]
+      summary: List available model providers
+      responses:
+        "200":
+          description: Provider registry and server-side configuration state
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderDescriptor"
+        "401":
+          description: Authentication required
+  /providers/openai/models:
+    get:
+      operationId: listOpenaiModels
+      tags: [providers]
+      summary: List models available to the configured OpenAI account
+      responses:
+        "200":
+          description: Models available to the server-side OpenAI credential
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderModelsResponse"
+        "401":
+          description: Authentication required
+        "502":
+          description: Provider is temporarily unavailable
+  /projects/{projectId}/provider-connection:
+    get:
+      operationId: getProjectProviderConnection
+      tags: [providers]
+      summary: Get the owned project's provider configuration
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Current provider configuration without credential material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectProviderConnectionState"
+        "401":
+          description: Authentication required
+        "404":
+          description: Project not found
+    put:
+      operationId: configureProjectProviderConnection
+      tags: [providers]
+      summary: Select a provider and model for an owned project
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderConnectionInput"
+      responses:
+        "200":
+          description: Provider selection saved without storing credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderConnection"
+        "400":
+          description: Invalid provider or model selection
+        "401":
+          description: Authentication required
+        "404":
+          description: Active project not found
+  /projects/{projectId}/provider-connection/validate:
+    post:
+      operationId: validateProjectProviderConnection
+      tags: [providers]
+      summary: Validate the owned project's provider connection
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Provider credential and selected model validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderValidationResponse"
+        "401":
+          description: Authentication required
+        "404":
+          description: Project or provider configuration not found
+        "503":
+          description: Provider credential is not configured
+        "502":
+          description: Provider is temporarily unavailable
 components:
   schemas:
     HealthStatus:
@@ -249,4 +363,101 @@ components:
         - archivedAt
         - createdAt
         - updatedAt
+    ProviderKey:
+      type: string
+      enum: [openai]
+    ProviderStatus:
+      type: string
+      enum: [pending, ready, invalid]
+    ProviderCapability:
+      type: string
+      enum: [text-generation, streaming]
+    ProviderDescriptor:
+      type: object
+      properties:
+        providerKey:
+          $ref: "#/components/schemas/ProviderKey"
+        displayName:
+          type: string
+        configured:
+          type: boolean
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderCapability"
+      required: [providerKey, displayName, configured, capabilities]
+    ProviderModel:
+      type: object
+      properties:
+        id:
+          type: string
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderCapability"
+      required: [id, capabilities]
+    ProviderModelsResponse:
+      type: object
+      properties:
+        providerKey:
+          $ref: "#/components/schemas/ProviderKey"
+        configured:
+          type: boolean
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderModel"
+      required: [providerKey, configured, models]
+    ProviderConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        providerKey:
+          $ref: "#/components/schemas/ProviderKey"
+        modelIdentifier:
+          type: string
+        status:
+          $ref: "#/components/schemas/ProviderStatus"
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProviderCapability"
+        validatedAt:
+          type: ["string", "null"]
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, providerKey, modelIdentifier, status, capabilities, validatedAt, updatedAt]
+    ProjectProviderConnectionState:
+      type: object
+      properties:
+        providerConfigured:
+          type: boolean
+        connection:
+          oneOf:
+            - $ref: "#/components/schemas/ProviderConnection"
+            - type: "null"
+      required: [providerConfigured, connection]
+    ProviderConnectionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        providerKey:
+          $ref: "#/components/schemas/ProviderKey"
+        modelIdentifier:
+          type: string
+          minLength: 1
+          maxLength: 160
+      required: [providerKey, modelIdentifier]
+    ProviderValidationResponse:
+      type: object
+      properties:
+        connection:
+          $ref: "#/components/schemas/ProviderConnection"
+        message:
+          type: string
+      required: [connection, message]
 

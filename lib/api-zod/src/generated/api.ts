@@ -137,3 +137,97 @@ export const ArchiveProjectResponse = zod.object({
 })
 
 
+/**
+ * @summary List available model providers
+ */
+export const ListProvidersResponseItem = zod.object({
+  "providerKey": zod.enum(['openai']),
+  "displayName": zod.string(),
+  "configured": zod.boolean(),
+  "capabilities": zod.array(zod.enum(['text-generation', 'streaming']))
+})
+export const ListProvidersResponse = zod.array(ListProvidersResponseItem)
+
+
+/**
+ * @summary List models available to the configured OpenAI account
+ */
+export const ListOpenaiModelsResponse = zod.object({
+  "providerKey": zod.enum(['openai']),
+  "configured": zod.boolean(),
+  "models": zod.array(zod.object({
+  "id": zod.string(),
+  "capabilities": zod.array(zod.enum(['text-generation', 'streaming']))
+}))
+})
+
+
+/**
+ * @summary Get the owned project's provider configuration
+ */
+export const GetProjectProviderConnectionParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const GetProjectProviderConnectionResponse = zod.object({
+  "providerConfigured": zod.boolean(),
+  "connection": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "providerKey": zod.enum(['openai']),
+  "modelIdentifier": zod.string(),
+  "status": zod.enum(['pending', 'ready', 'invalid']),
+  "capabilities": zod.array(zod.enum(['text-generation', 'streaming'])),
+  "validatedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Select a provider and model for an owned project
+ */
+export const ConfigureProjectProviderConnectionParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const configureProjectProviderConnectionBodyModelIdentifierMax = 160;
+
+
+
+export const ConfigureProjectProviderConnectionBody = zod.object({
+  "providerKey": zod.enum(['openai']),
+  "modelIdentifier": zod.string().min(1).max(configureProjectProviderConnectionBodyModelIdentifierMax)
+})
+
+export const ConfigureProjectProviderConnectionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "providerKey": zod.enum(['openai']),
+  "modelIdentifier": zod.string(),
+  "status": zod.enum(['pending', 'ready', 'invalid']),
+  "capabilities": zod.array(zod.enum(['text-generation', 'streaming'])),
+  "validatedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Validate the owned project's provider connection
+ */
+export const ValidateProjectProviderConnectionParams = zod.object({
+  "projectId": zod.coerce.string().uuid()
+})
+
+export const ValidateProjectProviderConnectionResponse = zod.object({
+  "connection": zod.object({
+  "id": zod.string().uuid(),
+  "providerKey": zod.enum(['openai']),
+  "modelIdentifier": zod.string(),
+  "status": zod.enum(['pending', 'ready', 'invalid']),
+  "capabilities": zod.array(zod.enum(['text-generation', 'streaming'])),
+  "validatedAt": zod.coerce.date().nullable(),
+  "updatedAt": zod.coerce.date()
+}),
+  "message": zod.string()
+})
+
+

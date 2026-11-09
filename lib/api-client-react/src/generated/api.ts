@@ -29,6 +29,12 @@ import type {
   HealthStatus,
   ListProjectsParams,
   Project,
+  ProjectProviderConnectionState,
+  ProviderConnection,
+  ProviderConnectionInput,
+  ProviderDescriptor,
+  ProviderModelsResponse,
+  ProviderValidationResponse,
   ReadinessStatus,
   UpdateProjectRequest
 } from './api.schemas';
@@ -722,5 +728,471 @@ export const useArchiveProject = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getArchiveProjectMutationOptions(options), queryClient);
+    }
+
+export const getListProvidersUrl = () => {
+
+
+
+
+  return `/api/providers`
+}
+
+/**
+ * @summary List available model providers
+ */
+export const listProviders = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProviderDescriptor[]> => {
+
+  return customFetch<ProviderDescriptor[]>(getListProvidersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProvidersQueryKey = () => {
+    return [
+    `/api/providers`
+    ] as const;
+    }
+
+
+export const getListProvidersQueryOptions = <TData = Awaited<ReturnType<typeof listProviders>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProvidersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProviders>>> = ({ signal }) => listProviders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listProviders>>>
+export type ListProvidersQueryError = ErrorType<void>
+
+
+export function useListProviders<TData = Awaited<ReturnType<typeof listProviders>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProviders<TData = Awaited<ReturnType<typeof listProviders>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listProviders>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProviders<TData = Awaited<ReturnType<typeof listProviders>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List available model providers
+ */
+
+export function useListProviders<TData = Awaited<ReturnType<typeof listProviders>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListProvidersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListOpenaiModelsUrl = () => {
+
+
+
+
+  return `/api/providers/openai/models`
+}
+
+/**
+ * @summary List models available to the configured OpenAI account
+ */
+export const listOpenaiModels = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProviderModelsResponse> => {
+
+  return customFetch<ProviderModelsResponse>(getListOpenaiModelsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListOpenaiModelsQueryKey = () => {
+    return [
+    `/api/providers/openai/models`
+    ] as const;
+    }
+
+
+export const getListOpenaiModelsQueryOptions = <TData = Awaited<ReturnType<typeof listOpenaiModels>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListOpenaiModelsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listOpenaiModels>>> = ({ signal }) => listOpenaiModels({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListOpenaiModelsQueryResult = NonNullable<Awaited<ReturnType<typeof listOpenaiModels>>>
+export type ListOpenaiModelsQueryError = ErrorType<void>
+
+
+export function useListOpenaiModels<TData = Awaited<ReturnType<typeof listOpenaiModels>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpenaiModels>>,
+          TError,
+          Awaited<ReturnType<typeof listOpenaiModels>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOpenaiModels<TData = Awaited<ReturnType<typeof listOpenaiModels>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listOpenaiModels>>,
+          TError,
+          Awaited<ReturnType<typeof listOpenaiModels>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListOpenaiModels<TData = Awaited<ReturnType<typeof listOpenaiModels>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List models available to the configured OpenAI account
+ */
+
+export function useListOpenaiModels<TData = Awaited<ReturnType<typeof listOpenaiModels>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listOpenaiModels>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListOpenaiModelsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetProjectProviderConnectionUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/projects/${projectId}/provider-connection`
+}
+
+/**
+ * @summary Get the owned project's provider configuration
+ */
+export const getProjectProviderConnection = async (projectId: string, options?: Parameters<typeof customFetch>[1]): Promise<ProjectProviderConnectionState> => {
+
+  return customFetch<ProjectProviderConnectionState>(getGetProjectProviderConnectionUrl(projectId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProjectProviderConnectionQueryKey = (projectId: string,) => {
+    return [
+    `/api/projects/${projectId}/provider-connection`
+    ] as const;
+    }
+
+
+export const getGetProjectProviderConnectionQueryOptions = <TData = Awaited<ReturnType<typeof getProjectProviderConnection>>, TError = ErrorType<void>>(projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectProviderConnectionQueryKey(projectId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectProviderConnection>>> = ({ signal }) => getProjectProviderConnection(projectId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: projectId !== null && projectId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetProjectProviderConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectProviderConnection>>>
+export type GetProjectProviderConnectionQueryError = ErrorType<void>
+
+
+export function useGetProjectProviderConnection<TData = Awaited<ReturnType<typeof getProjectProviderConnection>>, TError = ErrorType<void>>(
+ projectId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectProviderConnection>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectProviderConnection>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectProviderConnection<TData = Awaited<ReturnType<typeof getProjectProviderConnection>>, TError = ErrorType<void>>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getProjectProviderConnection>>,
+          TError,
+          Awaited<ReturnType<typeof getProjectProviderConnection>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetProjectProviderConnection<TData = Awaited<ReturnType<typeof getProjectProviderConnection>>, TError = ErrorType<void>>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get the owned project's provider configuration
+ */
+
+export function useGetProjectProviderConnection<TData = Awaited<ReturnType<typeof getProjectProviderConnection>>, TError = ErrorType<void>>(
+ projectId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getProjectProviderConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetProjectProviderConnectionQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConfigureProjectProviderConnectionUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/projects/${projectId}/provider-connection`
+}
+
+/**
+ * @summary Select a provider and model for an owned project
+ */
+export const configureProjectProviderConnection = async (projectId: string,
+    providerConnectionInput: ProviderConnectionInput, options?: Parameters<typeof customFetch>[1]): Promise<ProviderConnection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ProviderConnection>(getConfigureProjectProviderConnectionUrl(projectId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(providerConnectionInput)
+  }
+);}
+
+
+
+
+
+export const getConfigureProjectProviderConnectionMutationKey = () => ['configureProjectProviderConnection'] as const;
+
+export const getConfigureProjectProviderConnectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof configureProjectProviderConnection>>, TError,ConfigureProjectProviderConnectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof configureProjectProviderConnection>>, TError,ConfigureProjectProviderConnectionMutationVariables, TContext> => {
+
+const mutationKey = getConfigureProjectProviderConnectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof configureProjectProviderConnection>>, ConfigureProjectProviderConnectionMutationVariables> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  configureProjectProviderConnection(projectId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfigureProjectProviderConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof configureProjectProviderConnection>>>
+    export type ConfigureProjectProviderConnectionMutationBody = BodyType<ProviderConnectionInput>
+    export type ConfigureProjectProviderConnectionMutationError = ErrorType<void>
+    export type ConfigureProjectProviderConnectionMutationVariables = {projectId: string;data: BodyType<ProviderConnectionInput>}
+
+    /**
+ * @summary Select a provider and model for an owned project
+ */
+export const useConfigureProjectProviderConnection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof configureProjectProviderConnection>>, TError,ConfigureProjectProviderConnectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof configureProjectProviderConnection>>,
+        TError,
+        ConfigureProjectProviderConnectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfigureProjectProviderConnectionMutationOptions(options), queryClient);
+    }
+
+export const getValidateProjectProviderConnectionUrl = (projectId: string,) => {
+
+
+
+
+  return `/api/projects/${projectId}/provider-connection/validate`
+}
+
+/**
+ * @summary Validate the owned project's provider connection
+ */
+export const validateProjectProviderConnection = async (projectId: string, options?: Parameters<typeof customFetch>[1]): Promise<ProviderValidationResponse> => {
+
+  return customFetch<ProviderValidationResponse>(getValidateProjectProviderConnectionUrl(projectId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getValidateProjectProviderConnectionMutationKey = () => ['validateProjectProviderConnection'] as const;
+
+export const getValidateProjectProviderConnectionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateProjectProviderConnection>>, TError,ValidateProjectProviderConnectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof validateProjectProviderConnection>>, TError,ValidateProjectProviderConnectionMutationVariables, TContext> => {
+
+const mutationKey = getValidateProjectProviderConnectionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateProjectProviderConnection>>, ValidateProjectProviderConnectionMutationVariables> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  validateProjectProviderConnection(projectId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ValidateProjectProviderConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof validateProjectProviderConnection>>>
+
+    export type ValidateProjectProviderConnectionMutationError = ErrorType<void>
+    export type ValidateProjectProviderConnectionMutationVariables = {projectId: string}
+
+    /**
+ * @summary Validate the owned project's provider connection
+ */
+export const useValidateProjectProviderConnection = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateProjectProviderConnection>>, TError,ValidateProjectProviderConnectionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof validateProjectProviderConnection>>,
+        TError,
+        ValidateProjectProviderConnectionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getValidateProjectProviderConnectionMutationOptions(options), queryClient);
     }
 
